@@ -1,0 +1,28 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion SSH</title>
+</head>
+<body>
+  <h1>Connexion SSH via WebSocket</h1>
+  <button id="ssh-button">Se connecter en SSH</button>
+  <pre id="output"></pre>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    document.getElementById('ssh-button').addEventListener('click', () => {
+      document.getElementById('output').textContent = 'Connexion en cours...\n';
+      socket.emit('ssh-connect');
+    });
+
+    socket.on('ssh-data', (data) => {
+      document.getElementById('output').textContent += data + '\n';
+    });
+  </script>
+</body>
+</html>
