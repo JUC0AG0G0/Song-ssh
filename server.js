@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { Client } = require('ssh2');
 const fs = require('fs');
+const os = require('os');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -99,6 +100,15 @@ io.on('connection', (socket) => {
 const hostname = '0.0.0.0';
 const port = 3000;
 
-server.listen(port, hostname, () => {
-  console.log(`Serveur en écoute sur http://${hostname}:${port}`);
+server.listen(port, hostname, async () => {
+  const networkInterfaces = os.networkInterfaces();
+  const localAddress = Object.values(networkInterfaces)
+    .flat()
+    .find(iface => iface && iface.family === 'IPv4' && !iface.internal)
+    .address;
+
+  console.log(`Accessible à partir de l'url : http://${localAddress}:${port}`);
+  
+  const open = await import('open');
+  open.default(`http://${localAddress}:${port}`);
 });
