@@ -22,7 +22,7 @@ app.get('/machines', (req, res) => {
 io.on('connection', (socket) => {
   console.log('Client connecté');
 
-  const sound_url = 'https://www.myinstants.com/media/skounds/dry-fart.mp3';
+  const sound_url = 'https://www.myinstants.com/media/sounds/deg-deg_4M6Cojn.mp3';
 
   const script = (sound_url, volume) => `
     # Vérifie si les outils nécessaires sont installés

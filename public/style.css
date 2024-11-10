@@ -1,0 +1,85 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Open Sans", sans-serif;
+    accent-color: lime;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    color-scheme: dark;
+    background-color: black;
+    color: white;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 3rem;
+}
+
+.wrapper {
+    max-width: 75rem;
+    width: 100%;
+    padding: min(3rem, 5vw);
+}
+
+form {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+legend {
+    font-weight: 700;
+}
+
+fieldset > * + * {
+    margin-top: 0.5rem;
+}
+
+form > * + * {
+    margin-top: 1.5rem;
+}
+
+#machines-list div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+fieldset label, 
+fieldset input[type="range"] {
+    display: inline-flex;
+    align-items: center;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+input[type="range"] {
+    margin-left: 10px;
+    flex: 0 1 50%;
+}
+
+.output {
+    color: lime;
+}
+
+#global-slider-value {
+    display: inline-block;
+    width: 5ch;
+    text-align: right;
+}
+
+.buttonplay {
+    display: block; 
+    margin-top: 20px; 
+    font-size:xx-large; 
+    background-color: lime;
+    border: none;
+    padding: 10px;
+}

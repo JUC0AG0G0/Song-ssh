@@ -1,82 +1,108 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestion des Machines</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔊 Song ssh 🔊</title>
+    <link href="./style.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Machines</h1>
-    <div id="machines-list"></div>
+    <h1>🔊 Song ssh 🔊</h1>
+
+    <fieldset>
+        <legend>Sélection des machines</legend>
+        <div id="machines-list"></div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Paramètre</legend>
+        <label for="global-slider">Volume :</label>
+        <input type="range" id="global-slider" min="0" max="100" value="60" style="margin-left: 10px;">
+        <span id="global-slider-value">60%</span>    
+    </fieldset>
     
-    <label for="global-slider">Pourcentage :</label>
-    <input type="range" id="global-slider" min="0" max="100" value="60" style="margin-left: 10px;">
-    <span id="global-slider-value">60%</span>
+    <button id="connect-selected" class="buttonplay">Play song</button>
 
-    <button id="connect-selected" style="display: block; margin-top: 20px;">Se connecter aux machines sélectionnées</button>
-    <pre id="output"></pre>
+    <fieldset>
+        <legend>Output</legend>
+        <pre id="output" class="output"></pre>
+    </fieldset>
+    
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
 
-    fetch('/machines')
-      .then(response => response.json())
-      .then(machines => {
-        const machinesList = document.getElementById('machines-list');
-        
-        machines.forEach(machine => {
-          const machineDiv = document.createElement('div');
-          machineDiv.style.marginBottom = '10px';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `machine-${machine.id}`;
-          checkbox.dataset.machineId = machine.id;
-          checkbox.dataset.machineNom = machine.nom;
+        fetch('/machines')
+        .then(response => response.json())
+        .then(machines => {
+            const machinesList = document.getElementById('machines-list');
+            
+            machines.forEach(machine => {
+                const machineDiv = document.createElement('div');
+                machineDiv.style.marginBottom = '10px';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `machine-${machine.id}`;
+                checkbox.dataset.machineId = machine.id;
+                checkbox.dataset.machineNom = machine.nom;
 
-          const label = document.createElement('label');
-          label.htmlFor = `machine-${machine.id}`;
-          label.textContent = `Se connecter à ${machine.nom}`;
+                const label = document.createElement('label');
+                label.htmlFor = `machine-${machine.id}`;
+                label.textContent = `${machine.nom}`;
 
-          machineDiv.appendChild(checkbox);
-          machineDiv.appendChild(label);
-          machinesList.appendChild(machineDiv);
+                machineDiv.appendChild(checkbox);
+                machineDiv.appendChild(label);
+                machinesList.appendChild(machineDiv);
+            });
         });
-      });
 
-    const globalSlider = document.getElementById('global-slider');
-    const globalSliderValue = document.getElementById('global-slider-value');
-    globalSlider.oninput = () => {
-        globalSliderValue.textContent = `${globalSlider.value}%`;
-    };
-    
-    document.getElementById('connect-selected').onclick = () => {
-      const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+        const globalSlider = document.getElementById('global-slider');
+        const globalSliderValue = document.getElementById('global-slider-value');
+        globalSlider.oninput = () => {
+            globalSliderValue.textContent = `${globalSlider.value}%`;
+        };
 
-      if (selectedMachines.length === 0) {
-        document.getElementById('output').textContent = 'Veuillez sélectionner au moins une machine.\n';
-        return;
-      }
+        document.addEventListener('DOMContentLoaded', () => {
+        const outputFieldset = document.querySelector('fieldset:nth-of-type(3)');
+        const outputPre = document.getElementById('output');
 
-      const percentage = globalSlider.value
+        const updateOutputVisibility = () => {
+            if (outputPre.textContent.trim() === "") {
+                outputFieldset.style.display = 'none';
+            } else {
+                outputFieldset.style.display = 'block';
+            }
+        };
 
-      selectedMachines.forEach(checkbox => {
-        const machineNom = checkbox.dataset.machineNom;
-        const machineId = checkbox.dataset.machineId;
-        
-        document.getElementById('output').textContent += `Connexion en cours à ${machineNom}...\n`;
-        
-        console.log("machine : " + machineId);
-        console.log("Volume : " + globalSlider.value);
-        socket.emit('ssh-connect', {machineId, percentage});
+        updateOutputVisibility();
 
-      });
-    };
+        socket.on('ssh-data', (data) => {
+            outputPre.textContent += data + '\n';
+            updateOutputVisibility();
+        });
 
-    socket.on('ssh-data', (data) => {
-      document.getElementById('output').textContent += data + '\n';
-    });
-  </script>
+        document.getElementById('connect-selected').onclick = () => {
+            const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+
+            if (selectedMachines.length === 0) {
+                outputPre.textContent = 'Veuillez sélectionner au moins une machine.\n';
+                updateOutputVisibility();
+                return;
+            }
+
+            const percentage = globalSlider.value;
+            selectedMachines.forEach(checkbox => {
+                const machineNom = checkbox.dataset.machineNom;
+                const machineId = checkbox.dataset.machineId;
+                
+                outputPre.textContent += `Connexion en cours à ${machineNom}...\n`;
+                socket.emit('ssh-connect', { machineId, percentage });
+            });
+            updateOutputVisibility();
+        };
+        });
+    </script>
 </body>
 </html>
