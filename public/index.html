@@ -6,10 +6,15 @@
   <title>Gestion des Machines</title>
 </head>
 <body>
-  <h1>Machines</h1>
-  <div id="machines-list"></div>
-  <button id="connect-selected">Se connecter aux machines sélectionnées</button>
-  <pre id="output"></pre>
+    <h1>Machines</h1>
+    <div id="machines-list"></div>
+    
+    <label for="global-slider">Pourcentage :</label>
+    <input type="range" id="global-slider" min="0" max="100" value="60" style="margin-left: 10px;">
+    <span id="global-slider-value">60%</span>
+
+    <button id="connect-selected" style="display: block; margin-top: 20px;">Se connecter aux machines sélectionnées</button>
+    <pre id="output"></pre>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -40,6 +45,12 @@
         });
       });
 
+    const globalSlider = document.getElementById('global-slider');
+    const globalSliderValue = document.getElementById('global-slider-value');
+    globalSlider.oninput = () => {
+        globalSliderValue.textContent = `${globalSlider.value}%`;
+    };
+    
     document.getElementById('connect-selected').onclick = () => {
       const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
 
@@ -48,12 +59,18 @@
         return;
       }
 
+      const percentage = globalSlider.value
+
       selectedMachines.forEach(checkbox => {
         const machineNom = checkbox.dataset.machineNom;
         const machineId = checkbox.dataset.machineId;
         
         document.getElementById('output').textContent += `Connexion en cours à ${machineNom}...\n`;
-        socket.emit('ssh-connect', machineId);
+        
+        console.log("machine : " + machineId);
+        console.log("Volume : " + globalSlider.value);
+        socket.emit('ssh-connect', {machineId, percentage});
+
       });
     };
 

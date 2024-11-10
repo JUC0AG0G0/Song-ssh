@@ -22,9 +22,9 @@ app.get('/machines', (req, res) => {
 io.on('connection', (socket) => {
   console.log('Client connecté');
 
-  const sound_url = 'https://www.myinstants.com/media/sounds/dry-fart.mp3';
+  const sound_url = 'https://www.myinstants.com/media/skounds/dry-fart.mp3';
 
-  const script = (sound_url) => `
+  const script = (sound_url, volume) => `
     # Vérifie si les outils nécessaires sont installés
     if ! command -v wget &> /dev/null || ! command -v alsamixer &> /dev/null || ! command -v mpv &> /dev/null; then
         echo "wget, alsamixer, ou mpv n'est pas installé. Installation en cours..."
@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
     fi
     
     # Configure le volume au maximum
-    amixer set Master 80%
+    amixer set Master ${volume}%
     
     # Crée le dossier Téléchargements s'il n'existe pas
     mkdir -p ~/Téléchargements
@@ -50,9 +50,11 @@ io.on('connection', (socket) => {
     rm ~/Téléchargements/hihihafunnysound.mp3
   `;
 
-  socket.on('ssh-connect', (machineId) => {
+  socket.on('ssh-connect', (req) => {
     const machines = loadMachines();
-    const machine = machines.find(m => m.id === machineId);
+    const machine = machines.find(m => m.id === req.machineId);
+    console.log(req.machineId);
+    console.log(req.percentage)
 
     if (!machine) {
       socket.emit('ssh-data', 'Machine non trouvée');
@@ -67,7 +69,7 @@ io.on('connection', (socket) => {
       console.log('Connexion SSH prête');
       socket.emit('ssh-data', 'Connexion SSH établie ! Exécution du script...');
 
-      const execScript = script(sound_url);
+      const execScript = script(sound_url, req.percentage);
 
       conn.exec(execScript, (err, stream) => {
         if (err) {
