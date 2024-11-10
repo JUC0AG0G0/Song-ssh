@@ -8,26 +8,54 @@
 <body>
   <h1>Machines</h1>
   <div id="machines-list"></div>
+  <button id="connect-selected">Se connecter aux machines sélectionnées</button>
   <pre id="output"></pre>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    
+
     fetch('/machines')
       .then(response => response.json())
       .then(machines => {
         const machinesList = document.getElementById('machines-list');
+        
         machines.forEach(machine => {
-          const button = document.createElement('button');
-          button.textContent = `Se connecter à ${machine.nom}`;
-          button.onclick = () => {
-            document.getElementById('output').textContent = `Connexion en cours à ${machine.nom}...\n`;
-            socket.emit('ssh-connect', machine.id);
-          };
-          machinesList.appendChild(button);
+          const machineDiv = document.createElement('div');
+          machineDiv.style.marginBottom = '10px';
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `machine-${machine.id}`;
+          checkbox.dataset.machineId = machine.id;
+          checkbox.dataset.machineNom = machine.nom;
+
+          const label = document.createElement('label');
+          label.htmlFor = `machine-${machine.id}`;
+          label.textContent = `Se connecter à ${machine.nom}`;
+
+          machineDiv.appendChild(checkbox);
+          machineDiv.appendChild(label);
+          machinesList.appendChild(machineDiv);
         });
       });
+
+    document.getElementById('connect-selected').onclick = () => {
+      const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+
+      if (selectedMachines.length === 0) {
+        document.getElementById('output').textContent = 'Veuillez sélectionner au moins une machine.\n';
+        return;
+      }
+
+      selectedMachines.forEach(checkbox => {
+        const machineNom = checkbox.dataset.machineNom;
+        const machineId = checkbox.dataset.machineId;
+        
+        document.getElementById('output').textContent += `Connexion en cours à ${machineNom}...\n`;
+        socket.emit('ssh-connect', machineId);
+      });
+    };
 
     socket.on('ssh-data', (data) => {
       document.getElementById('output').textContent += data + '\n';
