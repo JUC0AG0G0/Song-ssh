@@ -32,7 +32,8 @@ io.on('connection', (socket) => {
         sudo apt update && sudo apt install -y wget alsa-utils mpv
     fi
     
-    # Configure le volume au maximum
+    # Configure le volume
+    amixer set Master unmute
     amixer set Master ${volume}%
     
     # Crée le dossier Téléchargements s'il n'existe pas
@@ -49,13 +50,28 @@ io.on('connection', (socket) => {
 
     # Supprime le fichier audio
     rm ~/Téléchargements/hihihafunnysound.mp3
+
+    # Fin du script
+    echo Fin du script
   `;
 
   socket.on('ssh-connect', (req) => {
     const machines = loadMachines();
-    const machine = machines.find(m => m.id === req.machineId);
-    console.log(req.machineId);
-    console.log(req.percentage)
+    const machine = machines.find(m => m.id === Number(req.machineId));
+  
+    if (!machine) {
+      console.error(`Machine avec ID ${req.machineId} non trouvée dans machines.json`);
+      socket.emit('ssh-data', 'Machine non trouvée');
+      return;
+    }
+  
+    console.log("id machine : " + req.machineId);
+    console.log("volume : " + req.percentage);
+  
+    console.log("machine : " + machine);
+    console.log("nom : " + machine.nom);
+    console.log("host : " + machine.adresse_ip);
+
 
     if (!machine) {
       socket.emit('ssh-data', 'Machine non trouvée');
@@ -70,7 +86,7 @@ io.on('connection', (socket) => {
       console.log('Connexion SSH prête');
       socket.emit('ssh-data', 'Connexion SSH établie ! Exécution du script...');
 
-      const execScript = script(sound_url, req.percentage);
+      const execScript = script(sound_url, Number(req.percentage));
 
       conn.exec(execScript, (err, stream) => {
         if (err) {
