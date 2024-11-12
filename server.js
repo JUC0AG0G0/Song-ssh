@@ -53,6 +53,8 @@ io.on('connection', (socket) => {
 
     # Fin du script
     echo Fin du script
+
+    exit
   `;
 
   socket.on('ssh-connect', (req) => {
