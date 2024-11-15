@@ -15,70 +15,75 @@ function loadMachines() {
   return JSON.parse(data);
 }
 
+function loadSounds() {
+  const data = fs.readFileSync('sound.json');
+  return JSON.parse(data);
+}
+
 app.get('/machines', (req, res) => {
   const machines = loadMachines();
-  res.json(machines);
+  const sounds = loadSounds();
+  res.json({ machines, sounds });
 });
+
+const script = (sound_url, volume) => `
+  # Vérifie si les outils nécessaires sont installés
+  if ! command -v wget &> /dev/null || ! command -v alsamixer &> /dev/null || ! command -v mpv &> /dev/null; then
+      echo "wget, alsamixer, ou mpv n'est pas installé. Installation en cours..."
+      sudo apt update && sudo apt install -y wget alsa-utils mpv
+  fi
+  
+  # Configure le volume
+  amixer set Master unmute
+  amixer set Master ${volume}%
+  
+  # Crée le dossier Téléchargements s'il n'existe pas
+  mkdir -p ~/Téléchargements
+  
+  # Télécharge le fichier audio
+  wget -O ~/Téléchargements/hihihafunnysound.mp3 "${sound_url}"
+  
+  # Vérifie le fichier téléchargé
+  ls ~/Téléchargements
+
+  # Joue le son en utilisant mpv
+  mpv ~/Téléchargements/hihihafunnysound.mp3
+
+  # Supprime le fichier audio
+  rm ~/Téléchargements/hihihafunnysound.mp3
+
+  # Fin du script
+  echo Fin du script
+
+  exit
+`;
 
 io.on('connection', (socket) => {
   console.log('Client connecté');
 
-  const sound_url = 'https://www.myinstants.com/media/sounds/deg-deg_4M6Cojn.mp3';
-
-  const script = (sound_url, volume) => `
-    # Vérifie si les outils nécessaires sont installés
-    if ! command -v wget &> /dev/null || ! command -v alsamixer &> /dev/null || ! command -v mpv &> /dev/null; then
-        echo "wget, alsamixer, ou mpv n'est pas installé. Installation en cours..."
-        sudo apt update && sudo apt install -y wget alsa-utils mpv
-    fi
-    
-    # Configure le volume
-    amixer set Master unmute
-    amixer set Master ${volume}%
-    
-    # Crée le dossier Téléchargements s'il n'existe pas
-    mkdir -p ~/Téléchargements
-    
-    # Télécharge le fichier audio
-    wget -O ~/Téléchargements/hihihafunnysound.mp3 "${sound_url}"
-    
-    # Vérifie le fichier téléchargé
-    ls ~/Téléchargements
-
-    # Joue le son en utilisant mpv
-    mpv ~/Téléchargements/hihihafunnysound.mp3
-
-    # Supprime le fichier audio
-    rm ~/Téléchargements/hihihafunnysound.mp3
-
-    # Fin du script
-    echo Fin du script
-
-    exit
-  `;
-
   socket.on('ssh-connect', (req) => {
     const machines = loadMachines();
     const machine = machines.find(m => m.id === Number(req.machineId));
-  
+
+    const sound = loadSounds();
+    const sounde = sound.find(s => s.id === Number(req.sound_id))
+
     if (!machine) {
       console.error(`Machine avec ID ${req.machineId} non trouvée dans machines.json`);
       socket.emit('ssh-data', 'Machine non trouvée');
       return;
     }
-  
+
+
     console.log("id machine : " + req.machineId);
     console.log("volume : " + req.percentage);
-  
     console.log("machine : " + machine);
     console.log("nom : " + machine.nom);
     console.log("host : " + machine.adresse_ip);
 
-
-    if (!machine) {
-      socket.emit('ssh-data', 'Machine non trouvée');
-      return;
-    }
+    console.log("id sound : " + req.sound_id);
+    console.log("nom sound : " + sounde.name);
+    console.log("lien sound : " + sounde.url);
 
     console.log(`Connexion SSH demandée pour la machine : ${machine.nom}`);
     
@@ -88,7 +93,7 @@ io.on('connection', (socket) => {
       console.log('Connexion SSH prête');
       socket.emit('ssh-data', 'Connexion SSH établie ! Exécution du script...');
 
-      const execScript = script(sound_url, Number(req.percentage));
+      const execScript = script(sounde.url, Number(req.percentage));
 
       conn.exec(execScript, (err, stream) => {
         if (err) {
