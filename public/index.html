@@ -25,6 +25,7 @@
 
         <label for="soundSelect">Choisir un son :</label>
         <select id="soundSelect">
+            <option value="random">Random 🎲</option>
         </select>
     </fieldset>
 
@@ -103,8 +104,16 @@
 
             document.getElementById('connect-selected').addEventListener('click', () => {
                 const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
-                const soundId = document.getElementById('soundSelect').value;
+                let soundId = document.getElementById('soundSelect').value;
                 const volume = globalSlider.value;
+
+                if (soundId === 'random') {
+                    const soundSelect = document.getElementById('soundSelect');
+                    const numberOfSounds = soundSelect.options.length - 1;
+                    const randomIndex = Math.floor(Math.random() * numberOfSounds) + 1;
+                    soundId = randomIndex;
+                }
+            
 
                 if (selectedMachines.length > 0) {
                     selectedMachines.forEach(checkbox => {
