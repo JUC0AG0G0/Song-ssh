@@ -9,7 +9,6 @@
 <body>
     <h1>🔊 Song ssh 🔊</h1>
 
-    <!-- Sélection des machines -->
     <fieldset>
         <legend>Sélection des machines</legend>
         <div id="machines-list"></div>
@@ -17,7 +16,6 @@
 
     
 
-    <!-- Paramètres du volume -->
     <fieldset>
         <legend>Paramètre</legend>
         <label for="global-slider">Volume :</label>
@@ -27,16 +25,11 @@
 
         <label for="soundSelect">Choisir un son :</label>
         <select id="soundSelect">
-            <!-- Les options seront insérées ici dynamiquement -->
         </select>
     </fieldset>
 
-    
-
-    <!-- Bouton pour jouer la chanson -->
     <button id="connect-selected" class="buttonplay">Play song</button>
 
-    <!-- Section pour afficher la sortie -->
     <fieldset>
         <legend>Output</legend>
         <pre id="output" class="output"></pre>
@@ -46,14 +39,12 @@
     <script>
         const socket = io();
 
-        // Récupère les machines et les sons du serveur
         fetch('/machines')
         .then(response => response.json())
         .then(data => {
             const machines = data.machines;
             const sounds = data.sounds;
             
-            // Remplir la liste des machines
             const machinesList = document.getElementById('machines-list');
             machines.forEach(machine => {
                 const machineDiv = document.createElement('div');
@@ -74,7 +65,6 @@
                 machinesList.appendChild(machineDiv);
             });
 
-            // Remplir le select avec les sons
             const soundSelect = document.getElementById('soundSelect');
             sounds.forEach(sound => {
                 const option = document.createElement('option');
@@ -111,7 +101,7 @@
 
             document.getElementById('connect-selected').addEventListener('click', () => {
                 const selectedMachines = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
-                const soundId = document.getElementById('soundSelect').value; // Récupère l'ID du son sélectionné
+                const soundId = document.getElementById('soundSelect').value;
                 const volume = globalSlider.value;
 
                 if (selectedMachines.length > 0) {
@@ -119,7 +109,7 @@
                         const machineId = checkbox.dataset.machineId;
                         socket.emit('ssh-connect', { 
                             machineId: machineId,
-                            sound_id: soundId, // Ajoute l'ID du son
+                            sound_id: soundId,
                             percentage: volume
                         });
                     });
