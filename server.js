@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
 });
 
 const hostname = '0.0.0.0';
-const port = 3000;
+const port = 3001;
 
 server.listen(port, hostname, async () => {
   const networkInterfaces = os.networkInterfaces();
