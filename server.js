@@ -74,6 +74,12 @@ io.on('connection', (socket) => {
       return;
     }
 
+    if (!sounde) {
+      console.error(`Son avec ID ${req.sound_id} non trouvé dans sound.json`);
+      socket.emit('ssh-data', 'Son non trouvé');
+      return;
+    }
+
 
     console.log("id machine : " + req.machineId);
     console.log("volume : " + req.percentage);
