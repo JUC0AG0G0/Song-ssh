@@ -125,10 +125,10 @@ const port = 3001;
 
 server.listen(port, hostname, async () => {
   const networkInterfaces = os.networkInterfaces();
-  const localAddress = Object.values(networkInterfaces)
+  const externalIPv4 = Object.values(networkInterfaces)
     .flat()
-    .find(iface => iface && iface.family === 'IPv4' && !iface.internal)
-    .address;
+    .find(iface => iface && iface.family === 'IPv4' && !iface.internal);
+  const localAddress = externalIPv4 ? externalIPv4.address : 'localhost';
 
   console.log(`Accessible à partir de l'url : http://${localAddress}:${port}`);
   
