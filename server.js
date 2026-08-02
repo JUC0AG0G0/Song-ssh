@@ -26,6 +26,15 @@ app.get('/machines', (req, res) => {
   res.json({ machines, sounds });
 });
 
+function isSafeSoundUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 const script = (sound_url, volume) => `
   # Vérifie si les outils nécessaires sont installés
   if ! command -v wget &> /dev/null || ! command -v alsamixer &> /dev/null || ! command -v mpv &> /dev/null; then
@@ -98,6 +107,11 @@ io.on('connection', (socket) => {
     conn.on('ready', () => {
       console.log('Connexion SSH prête');
       socket.emit('ssh-data', 'Connexion SSH établie ! Exécution du script...');
+
+      if (!isSafeSoundUrl(sounde.url)) {
+        socket.emit('ssh-data', 'URL de son invalide, opération annulée.');
+        return conn.end();
+      }
 
       const execScript = script(sounde.url, Number(req.percentage));
 
